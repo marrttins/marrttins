@@ -1,17 +1,44 @@
 <?php
 // Database Configuration
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'marrthings');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+
+// Detect if running on Vercel
+$isVercel = getenv('VERCEL') || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'vercel.app') !== false);
+
+if ($isVercel) {
+    // TiDB Cloud Credentials
+    define('DB_HOST', 'gateway01.eu-central-1.prod.aws.tidbcloud.com');
+    define('DB_PORT', '4000');
+    define('DB_NAME', 'sys'); 
+    define('DB_USER', '4NJHNgMJdqczzxC.root');
+    define('DB_PASS', 'GZtZMXqQkE8cP1FT');
+} else {
+    // Local XAMPP Credentials
+    define('DB_HOST', 'localhost');
+    define('DB_PORT', '3306');
+    define('DB_NAME', 'marrthings');
+    define('DB_USER', 'root');
+    define('DB_PASS', '');
+}
 
 try {
-    $pdo = new PDO("mysql:host=" . DB_HOST, DB_USER, DB_PASS);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME;
+    $options = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ];
     
-    // Create database if not exists
-    $pdo->exec("CREATE DATABASE IF NOT EXISTS " . DB_NAME);
-    $pdo->exec("USE " . DB_NAME);
+    // TiDB Cloud requires SSL
+    if ($isVercel) {
+        $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+    }
+
+    $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+    
+    // Create database if not exists (Only for local development)
+    if (!$isVercel && DB_HOST === 'localhost') {
+        $pdo->exec("CREATE DATABASE IF NOT EXISTS " . DB_NAME);
+        $pdo->exec("USE " . DB_NAME);
+    }
     
 } catch(PDOException $e) {
     die("Database Connection Error: " . $e->getMessage());
