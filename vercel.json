@@ -1,18 +1,14 @@
 {
   "version": 2,
   "functions": {
-    "**/*.php": {
-      "runtime": "vercel-php@0.7.2"
-    }
+    "api/**/*.php": { "runtime": "vercel-php@0.7.2" },
+    "*.php": { "runtime": "vercel-php@0.7.2" },
+    "mat/*.php": { "runtime": "vercel-php@0.7.2" }
   },
   "routes": [
-    {
-      "src": "/(assets|logs)/(.*)",
-      "dest": "/$1/$2"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.php"
-    }
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/mat/(.*)", "dest": "/mat/$1" },
+    { "src": "/(.*).php", "dest": "/$1.php" },
+    { "src": "/(.*)", "dest": "/index.php" }
   ]
 }
