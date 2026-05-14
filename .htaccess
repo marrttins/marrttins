@@ -1,0 +1,38 @@
+Options -Indexes
+ErrorDocument 404 /404
+RewriteEngine On
+RewriteBase /
+
+# ── ModSecurity: disable WAF for payment pages ─────────────────
+<IfModule mod_security.c>
+    <FilesMatch "^(payment-success|stripe-payment|create-checkout-session)\.php$">
+        SecFilterEngine Off
+        SecFilterScanPOST Off
+    </FilesMatch>
+</IfModule>
+<IfModule mod_security2.c>
+    <FilesMatch "^(payment-success|stripe-payment|create-checkout-session)\.php$">
+        SecRuleEngine Off
+    </FilesMatch>
+</IfModule>
+# ───────────────────────────────────────────────────────────────
+
+# Protect the logs directory
+<Directory "/var/www/html/logs">
+    Require all denied
+</Directory>
+
+# 0. Always allow direct access to payment pages (no redirect)
+RewriteRule ^payment-success\.php$ - [L]
+RewriteRule ^stripe-payment\.php$ - [L]
+RewriteRule ^create-checkout-session\.php$ - [L]
+
+# 1. Redirect /file.php to /file (clean URLs) - skipped for payment pages above
+RewriteCond %{THE_REQUEST} \s/+([^.]+)\.php[\s?] [NC]
+RewriteRule ^ /%1 [NC,L,R=301]
+
+# 2. Internally rewrite /file to /file.php
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+?)/?$ $1.php [NC,L]
