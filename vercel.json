@@ -1,9 +1,9 @@
 {
   "version": 2,
   "functions": {
-    "api/**/*.php": { "runtime": "vercel-php@0.7.2" },
-    "*.php": { "runtime": "vercel-php@0.7.2" },
-    "mat/*.php": { "runtime": "vercel-php@0.7.2" }
+    "**/*.php": {
+      "runtime": "vercel-php@0.9.0"
+    }
   },
   "routes": [
     { "src": "/assets/(.*)", "dest": "/assets/$1" },
