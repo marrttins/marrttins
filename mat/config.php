@@ -1,24 +1,12 @@
 <?php
 // Database Configuration
 
-// Detect if running on Vercel
-$isVercel = getenv('VERCEL') || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'vercel.app') !== false);
-
-if ($isVercel) {
-    // TiDB Cloud Credentials
-    define('DB_HOST', 'gateway01.eu-central-1.prod.aws.tidbcloud.com');
-    define('DB_PORT', '4000');
-    define('DB_NAME', 'sys'); 
-    define('DB_USER', '4NJHNgMJdqczzxC.root');
-    define('DB_PASS', 'GZtZMXqQkE8cP1FT');
-} else {
-    // Local XAMPP Credentials
-    define('DB_HOST', 'localhost');
-    define('DB_PORT', '3306');
-    define('DB_NAME', 'marrthings');
-    define('DB_USER', 'root');
-    define('DB_PASS', '');
-}
+// Detect if running on Vercel or using remote DB
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_PORT', getenv('DB_PORT') ?: '3306');
+define('DB_NAME', getenv('DB_NAME') ?: 'marrthings');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASS', getenv('DB_PASS') ?: '');
 
 try {
     $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME;
@@ -27,15 +15,15 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ];
     
-    // TiDB Cloud requires SSL
-    if ($isVercel) {
+    // Enable SSL if we are not on localhost (Remote DBs like TiDB require this)
+    if (DB_HOST !== 'localhost') {
         $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
     }
 
     $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
     
     // Create database if not exists (Only for local development)
-    if (!$isVercel && DB_HOST === 'localhost') {
+    if (DB_HOST === 'localhost') {
         $pdo->exec("CREATE DATABASE IF NOT EXISTS " . DB_NAME);
         $pdo->exec("USE " . DB_NAME);
     }
